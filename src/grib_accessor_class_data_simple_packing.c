@@ -252,17 +252,17 @@ static int unpack_double_element(grib_accessor* a, size_t idx, double* val)
     if ((err = grib_get_long_internal(gh, self->decimal_scale_factor, &decimal_scale_factor)) != GRIB_SUCCESS)
         return err;
 
+    s = grib_power(binary_scale_factor, 2);
+    d = grib_power(-decimal_scale_factor, 10);
+
     /* Special case */
 
-
     if (bits_per_value == 0) {
-        *val = reference_value;
+        *val = reference_value*d;
         return GRIB_SUCCESS;
     }
 
     Assert(idx < n_vals);
-    s = grib_power(binary_scale_factor, 2);
-    d = grib_power(-decimal_scale_factor, 10);
 
     grib_context_log(a->context, GRIB_LOG_DEBUG,
                      "grib_accessor_data_simple_packing: unpack_double_element: creating %s, %d values (idx=%ld)",
@@ -338,11 +338,12 @@ static int _unpack_double(grib_accessor* a, double* val, size_t* len, unsigned c
     if (bits_per_value > (sizeof(long) * 8)) {
         return GRIB_INVALID_BPV;
     }
-
+    
     if (self->units_factor &&
         (grib_get_double_internal(gh, self->units_factor, &units_factor) == GRIB_SUCCESS)) {
         grib_set_double_internal(gh, self->units_factor, 1.0);
     }
+    
 
     if (self->units_bias &&
         (grib_get_double_internal(gh, self->units_bias, &units_bias) == GRIB_SUCCESS)) {
@@ -355,7 +356,7 @@ static int _unpack_double(grib_accessor* a, double* val, size_t* len, unsigned c
     }
 
     self->dirty = 0;
-
+    
     if ((err = grib_get_double_internal(gh, self->reference_value, &reference_value)) !=
         GRIB_SUCCESS)
         return err;
@@ -372,6 +373,8 @@ static int _unpack_double(grib_accessor* a, double* val, size_t* len, unsigned c
     /* Special case */
 
     if (bits_per_value == 0) {
+        reference_value *= d;
+        grib_set_double_internal(gh, self->reference_value, reference_value);
         for (i = 0; i < n_vals; i++)
             /* apply decimal & binary scaling to the reference value */
             val[i] = reference_value;// * s * d;
