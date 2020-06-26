@@ -148,10 +148,11 @@ long grib_get_decimal_scale_fact(double max, double min, long bpval, long binary
     double dmaxint       = (double)maxint;
 
     range *= grib_power(-binary_scale, 2);
+    printf("grib_api: decimal_scale_fact=%ld max=%g min=%g bits_per_value=%ld binary_scale=%ld\n",scale,max,min,bpval,binary_scale);
 
     Assert(bpval >= 1);
     if (range == 0)
-        return 0;
+        return 3;
 
     while ((range * zs) > dmaxint) {
         scale--;
