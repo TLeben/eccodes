@@ -258,7 +258,9 @@ static int unpack_double_element(grib_accessor* a, size_t idx, double* val)
     /* Special case */
 
     if (bits_per_value == 0) {
-        *val = reference_value*d;
+        //if (self->edition == 1)
+        //    reference_value *= d
+        *val = reference_value;
         return GRIB_SUCCESS;
     }
 
@@ -371,12 +373,12 @@ static int _unpack_double(grib_accessor* a, double* val, size_t* len, unsigned c
     d = grib_power(-decimal_scale_factor, 10);
 
     /* Special case */
-
+     
     if (bits_per_value == 0) {
-        reference_value *= d;
+        if (self->edition == 1)
+            reference_value *= d;
         grib_set_double_internal(gh, self->reference_value, reference_value);
         for (i = 0; i < n_vals; i++)
-            /* apply decimal & binary scaling to the reference value */
             val[i] = reference_value;// * s * d;
         *len = n_vals;
         return GRIB_SUCCESS;
